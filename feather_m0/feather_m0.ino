@@ -18,6 +18,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 void setup() 
 {
+  digitalWrite(13, LOW); // turn the LED off by making the voltage LOW
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
