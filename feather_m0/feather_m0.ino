@@ -1,5 +1,9 @@
+// Radio imports
 #include <SPI.h>
 #include <RH_RF95.h>
+
+// Import for Watchdog.sleep
+#include <Adafruit_SleepyDog.h>
 
 // Configure feather m0 
 #define RFM95_CS 8
@@ -59,7 +63,6 @@ void sendPacket()
   Serial.println("Transmitting..."); // Send a message to rf95_server
   
   char radiopacket[20] = "Hello World #      ";
-  itoa(packetnum++, radiopacket+13, 10);
   Serial.print("Sending "); Serial.println(radiopacket);
   radiopacket[19] = 0;
   
@@ -107,7 +110,7 @@ bool waitReply()
 void loop()
 {
   // Send packet to gateway
-  sendPacket()
+  sendPacket();
 
   int numberOfRetries = 0; // Number of retries performed
   // After 3 unsuccessful transmits (no reply from gateway), give up
@@ -116,6 +119,7 @@ void loop()
     numberOfRetries++;
   }
 
-  // TODO: Change to sleep
-  delay(5000); // Wait 5 seconds between transmits
+  // TODO: Look at RTC sleep if the power draw is still bad
+  rf95.sleep();
+  Watchdog.sleep(60000); // Max sleep time is ~15s
 }
