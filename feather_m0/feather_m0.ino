@@ -114,12 +114,16 @@ void loop()
 
   int numberOfRetries = 0; // Number of retries performed
   // After 3 unsuccessful transmits (no reply from gateway), give up
-  while (!waitReply && numberOfRetries < 3)
+  while (!waitReply() && numberOfRetries < 2)
   {
+    sendPacket();
     numberOfRetries++;
   }
 
   // TODO: Look at RTC sleep if the power draw is still bad
   rf95.sleep();
-  Watchdog.sleep(60000); // Max sleep time is ~15s
+  // Sleep for 1min
+  for (int i = 0; i < 4; i++) {
+    Watchdog.sleep(60000); // Max sleep time is ~15s
+  }
 }
