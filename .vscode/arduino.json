@@ -1,0 +1,5 @@
+{
+    "configuration": "opt=small,usbstack=arduino,debug=off",
+    "board": "adafruit:samd:adafruit_feather_m0",
+    "sketch": "feather_m0/feather_m0.ino"
+}
