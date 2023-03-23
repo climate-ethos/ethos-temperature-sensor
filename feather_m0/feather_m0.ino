@@ -1,9 +1,15 @@
+// Allows dtostrf
+#include <avr/dtostrf.h>
+
 // Radio imports
 #include <SPI.h>
 #include <RH_RF95.h>
 
 // Import for sleep
 #include <RTCZero.h>
+
+// The ID of the sensor, change depending on what number to assign
+const char sensor_id[] = "001";
 
 // Configure feather m0
 #define RFM95_CS 8
@@ -110,8 +116,22 @@ void loop()
 void sendPacket()
 {
   Serial.println("Transmitting..."); // Send a message to rf95_server
-  // TODO: Use temp and humidity values here
-  char radiopacket[15] = "I001T24.3H27.3";
+  // TODO: Measure temp and humidity
+  float temperatureC = 27.2;
+  char temperatureCString[4];
+  dtostrf(temperatureC, 4, 1 ,temperatureCString);
+  float humidityRH = 30.7;
+  char humidityRHString[4];
+  dtostrf(humidityRH, 4, 1 ,humidityRHString);
+  // Radio packet looks like "IxxxTxxxxHxxxx0"
+  // e.g. "I001T27.2H30.7" where I is ID, T is temperature and H is humidity
+  char radiopacket[15];
+  radiopacket[0] = 'I';
+  strcat(radiopacket, sensor_id);
+  radiopacket[4] = 'T';
+  strcat(radiopacket, temperatureCString);
+  radiopacket[9] = 'H';
+  strcat(radiopacket, humidityRHString);
   radiopacket[14] = 0; // set last char to 0
 
   Serial.println("Sending...");
