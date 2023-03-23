@@ -61,6 +61,7 @@ void loop()
     }
   }
   // Reset alarm and return to sleep
+  sleepRadio();
   resetAlarm();
   zerortc.standbyMode();
 }
