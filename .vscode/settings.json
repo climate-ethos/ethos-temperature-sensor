@@ -1,5 +1,7 @@
 {
 	"cSpell.words": [
+		"Arduino",
+		"dtostrf",
 		"zerortc"
 	]
 }

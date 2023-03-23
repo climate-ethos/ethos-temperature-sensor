@@ -1,8 +1,14 @@
 // Import for sleep
 #include <RTCZero.h>
 
+#include "Radio.h"
+
 // The ID of the sensor, change depending on what number to assign
 char sensor_id[] = "001";
+
+// TODO: Change default frequency of radio
+float radio_frequency = 915.0;
+Radio radio(radio_frequency);
 
 // RTC Clock for sleep
 RTCZero zerortc;
@@ -31,7 +37,8 @@ void setup()
   Serial.begin(115200);
 
   // Setup radio
-  setupRadio();
+  radio.setupRadio();
+  radio.sleepRadio();
 
   // Setup clocks
   zerortc.begin();
@@ -51,17 +58,17 @@ void loop()
     float temperatureC = 27.3;
     float humidityRH = 30.2;
     // Send packet to gateway
-    sendPacket(temperatureC, humidityRH, sensor_id);
+    radio.sendPacket(temperatureC, humidityRH, sensor_id);
     // After 3 unsuccessful transmits (no reply from gateway), give up
     int numberOfRetries = 0;
-    while (!waitReply() && numberOfRetries < 2)
+    while (!radio.waitReply() && numberOfRetries < 2)
     {
-      sendPacket(temperatureC, humidityRH, sensor_id);
+      radio.sendPacket(temperatureC, humidityRH, sensor_id);
       numberOfRetries++;
     }
   }
   // Reset alarm and return to sleep
-  sleepRadio();
+  radio.sleepRadio();
   resetAlarm();
   zerortc.standbyMode();
 }
