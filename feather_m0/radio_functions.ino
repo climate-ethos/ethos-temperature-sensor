@@ -51,7 +51,11 @@ void setupRadio()
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
 
-  // Put radio to sleep
+  sleepRadio();
+}
+
+// Put the radio to sleep
+void sleepRadio() {
   rf95.sleep();
 }
 
