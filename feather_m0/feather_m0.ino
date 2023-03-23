@@ -20,6 +20,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 RTCZero zerortc;
 
 // Set how often alarm goes off here
+// TODO: Change to every 10 minutes
 const byte alarmSeconds = 10;
 const byte alarmMinutes = 0;
 const byte alarmHours = 0;
@@ -87,30 +88,22 @@ void setup()
 
 void loop()
 {
-  // Send packet to gateway
-  // sendPacket();
-
-  // int numberOfRetries = 0; // Number of retries performed
-  // After 3 unsuccessful transmits (no reply from gateway), give up
-  // while (!waitReply() && numberOfRetries < 2)
-  // {
-    // sendPacket();
-    // numberOfRetries++;
-  // }
-
-  // Zero RTC Sleep
+  // Woken up from sleep
   if (alarmFlag == true) {
     alarmFlag = false;  // Clear flag
-    // TODO: Dont turn on LED
-    digitalWrite(LED_BUILTIN, HIGH);
-    Serial.println("Alarm went off - I'm awake!");
+    // Send packet to gateway
+    sendPacket();
+    // After 3 unsuccessful transmits (no reply from gateway), give up
+    int numberOfRetries = 0;
+    while (!waitReply() && numberOfRetries < 2)
+    {
+      sendPacket();
+      numberOfRetries++;
+    }
   }
-  // TODO: Remove this delay
-  delay(5000);
-  resetAlarm();  // Reset alarm before returning to sleep
-  Serial.println("Alarm set, going to sleep now.");
-  digitalWrite(LED_BUILTIN, LOW);
-  zerortc.standbyMode();    // Sleep until next alarm match
+  // Reset alarm and return to sleep
+  resetAlarm();
+  zerortc.standbyMode();
 }
 
 // Function that sends packet to the gateway
