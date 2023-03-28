@@ -78,8 +78,6 @@ void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
   radiopacket[14] = 0; // set last char to 0
 
   Serial.println("Sending...");
-  // TODO: Is this needed?
-  delay(10);
   _rf95.send((uint8_t *)radiopacket, 20);
 
   Serial.println("Waiting for packet to complete...");
