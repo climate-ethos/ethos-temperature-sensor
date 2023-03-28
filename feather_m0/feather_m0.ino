@@ -59,12 +59,10 @@ void loop()
     float humidityRH = 30.2;
     // Send packet to gateway
     radio.sendPacket(temperatureC, humidityRH, sensor_id);
-    // After 3 unsuccessful transmits (no reply from gateway), give up
-    int numberOfRetries = 0;
-    while (!radio.waitReply() && numberOfRetries < 2)
+    // If no reply, retry transmit once
+    if (!radio.waitReply())
     {
       radio.sendPacket(temperatureC, humidityRH, sensor_id);
-      numberOfRetries++;
     }
   }
   // Reset alarm and return to sleep
