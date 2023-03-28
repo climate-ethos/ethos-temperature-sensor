@@ -58,10 +58,13 @@ void Radio::sleepRadio() {
 void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
 {
   // Convert floats to strings
-  char temperatureCString[4];
-  dtostrf(temperatureC, 4, 1 ,temperatureCString);
-  char humidityRHString[4];
-  dtostrf(humidityRH, 4, 1 ,humidityRHString);
+  char temperatureCString[5];
+  char humidityRHString[5];
+  dtostrf(temperatureC, 4, 1, temperatureCString);
+  dtostrf(humidityRH, 4, 1, humidityRHString);
+  // Sanitize to ensure that char array end is marked
+  temperatureCString[4] = 0;
+  humidityRHString[4] = 0;
 
   // Radio packet looks like "IxxxTxxxxHxxxx0"
   // e.g. "I001T27.2H30.7" where I is ID, T is temperature and H is humidity
