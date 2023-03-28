@@ -19,7 +19,7 @@ const byte alarmSeconds = 10;
 const byte alarmMinutes = 0;
 const byte alarmHours = 0;
 
-volatile bool alarmFlag = false; // Start awake
+volatile bool alarmFlag = true; // Start awake
 
 #if defined (MOTEINO_M0)
   #if defined(SERIAL_PORT_USBVIRTUAL)
@@ -59,13 +59,14 @@ void loop()
     float humidityRH = 30.2;
     // Send packet to gateway
     radio.sendPacket(temperatureC, humidityRH, sensor_id);
-    // If no reply, retry transmit once
-    if (!radio.waitReply())
-    {
-      radio.sendPacket(temperatureC, humidityRH, sensor_id);
-    }
+    // TODO: If no reply, retry transmit once
+    // if (!radio.waitReply())
+    // {
+    //   radio.sendPacket(temperatureC, humidityRH, sensor_id);
+    // }
   }
   // Reset alarm and return to sleep
+  delay(10); // This is needed to prevent hanging
   radio.sleepRadio();
   resetAlarm();
   zerortc.standbyMode();
