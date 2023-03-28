@@ -93,6 +93,7 @@ bool Radio::waitReply()
   uint8_t len = sizeof(buf);
 
   Serial.println("Waiting for reply...");
+  // TODO: Optimize time to wait
   if (_rf95.waitAvailableTimeout(1000))
   {
     // Should be a reply message for us now
