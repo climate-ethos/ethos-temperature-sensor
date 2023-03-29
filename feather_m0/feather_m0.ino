@@ -44,6 +44,10 @@ void setup()
   Serial.begin(115200);
 
   // Setup temp sensor
+  if (!sht4.begin()) {
+    Serial.println("Couldn't find SHT4x");
+    while (1) delay(1);
+  }
   sht4.setPrecision(SHT4X_HIGH_PRECISION);
   sht4.setHeater(SHT4X_NO_HEATER);
 
