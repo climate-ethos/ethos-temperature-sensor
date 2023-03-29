@@ -57,6 +57,7 @@ void Radio::sleepRadio() {
 
 void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
 {
+  // TODO: Better checks for overflows
   // Convert floats to strings
   char temperatureCString[5];
   char humidityRHString[5];
@@ -76,6 +77,8 @@ void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
   radiopacket[9] = 'H';
   strcat(radiopacket, humidityRHString);
   radiopacket[14] = 0; // set last char to 0
+
+  // TODO: Encrypt radio packet before sending
 
   Serial.println("Sending...");
   _rf95.send((uint8_t *)radiopacket, 20);
