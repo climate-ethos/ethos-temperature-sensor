@@ -1,6 +1,10 @@
 // Import for sleep
 #include <RTCZero.h>
 
+// Library for SHT4x
+#include "Adafruit_SHT4x.h"
+
+// Custom library for radio
 #include "Radio.h"
 
 // The ID of the sensor, change depending on what number to assign
@@ -27,6 +31,9 @@ volatile bool alarmFlag = true; // Start awake
   #endif
 #endif
 
+// Setup temp sensor
+Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+
 void setup()
 {
   // Turn off LED
@@ -35,6 +42,10 @@ void setup()
 
   // Begin console
   Serial.begin(115200);
+
+  // Setup temp sensor
+  sht4.setPrecision(SHT4X_HIGH_PRECISION);
+  sht4.setHeater(SHT4X_NO_HEATER);
 
   // Setup radio
   radio.setupRadio();
@@ -54,11 +65,11 @@ void loop()
   // Woken up from sleep
   if (alarmFlag == true) {
     alarmFlag = false;  // Clear flag
-    // TODO: Read sensor data measurement
-    float temperatureC = 27.3;
-    float humidityRH = 30.2;
+    // Read sensor data measurement
+    sensors_event_t humidity, temperature;
+    sht4.getEvent(&humidity, &temperature);
     // Send packet to gateway
-    radio.sendPacket(temperatureC, humidityRH, sensor_id);
+    radio.sendPacket(temperature.temperature, humidity.relative_humidity, sensor_id);
     // TODO: If no reply, retry transmit once
     // if (!radio.waitReply())
     // {
