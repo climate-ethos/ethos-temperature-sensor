@@ -19,8 +19,8 @@ RTCZero zerortc;
 
 // Set how often alarm goes off here
 // TODO: Change to every 10 minutes
-const byte alarmSeconds = 10;
-const byte alarmMinutes = 0;
+const byte alarmSeconds = 0;
+const byte alarmMinutes = 10;
 const byte alarmHours = 0;
 
 volatile bool alarmFlag = true; // Start awake
@@ -44,12 +44,16 @@ void setup()
   Serial.begin(115200);
 
   // Setup temp sensor
-  if (!sht4.begin()) {
+  while (!sht4.begin()) {
     Serial.println("Couldn't find SHT4x");
-    while (1) delay(1);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
   }
+  digitalWrite(LED_BUILTIN, LOW);
+  
   sht4.setPrecision(SHT4X_HIGH_PRECISION);
   sht4.setHeater(SHT4X_NO_HEATER);
+  Serial.println("Initialized sensor");
 
   // Setup radio
   radio.setupRadio();
