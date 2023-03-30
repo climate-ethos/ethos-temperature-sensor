@@ -7,6 +7,15 @@
 // Custom library for radio
 #include "Radio.h"
 
+// Define SHT power pin
+#define SHT_PWD_PIN A0
+
+#if defined (MOTEINO_M0)
+  #if defined(SERIAL_PORT_USBVIRTUAL)
+    #define Serial SERIAL_PORT_USBVIRTUAL // Required for Serial on Zero based boards
+  #endif
+#endif
+
 // The ID of the sensor, change depending on what number to assign
 char sensor_id[] = "001";
 
@@ -25,12 +34,6 @@ const byte alarmHours = 0;
 
 volatile bool alarmFlag = true; // Start awake
 
-#if defined (MOTEINO_M0)
-  #if defined(SERIAL_PORT_USBVIRTUAL)
-    #define Serial SERIAL_PORT_USBVIRTUAL // Required for Serial on Zero based boards
-  #endif
-#endif
-
 // Setup temp sensor
 Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 
@@ -40,6 +43,12 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
+  // Setup A0 to power output
+  digitalWrite(SHT_PWD_PIN, LOW);
+  pinMode(SHT_PWD_PIN, OUTPUT);
+  digitalWrite(SHT_PWD_PIN, HIGH);
+  delay(1);
+
   // Begin console
   Serial.begin(115200);
 
@@ -47,10 +56,10 @@ void setup()
   while (!sht4.begin()) {
     Serial.println("Couldn't find SHT4x");
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
+    delay(10);
   }
   digitalWrite(LED_BUILTIN, LOW);
-  
+
   sht4.setPrecision(SHT4X_HIGH_PRECISION);
   sht4.setHeater(SHT4X_NO_HEATER);
   Serial.println("Initialized sensor");
@@ -73,11 +82,18 @@ void loop()
   // Woken up from sleep
   if (alarmFlag == true) {
     alarmFlag = false;  // Clear flag
+    // Turn on sensor
+    digitalWrite(SHT_PWD_PIN, HIGH);
+    delay(1);
     // Read sensor data measurement
     sensors_event_t humidity, temperature;
-    sht4.getEvent(&humidity, &temperature);
+    while(!sht4.getEvent(&humidity, &temperature)) {
+      Serial.println("Retry measure");
+      delay(10);
+    }
     // Send packet to gateway
     radio.sendPacket(temperature.temperature, humidity.relative_humidity, sensor_id);
+    delay(10); // This is needed to prevent hanging
     // TODO: If no reply, retry transmit once
     // if (!radio.waitReply())
     // {
@@ -85,7 +101,6 @@ void loop()
     // }
   }
   // Reset alarm and return to sleep
-  delay(10); // This is needed to prevent hanging
   radio.sleepRadio();
   resetAlarm();
   zerortc.standbyMode();
