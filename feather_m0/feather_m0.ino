@@ -87,18 +87,23 @@ void loop()
     delay(1);
     // Read sensor data measurement
     sensors_event_t humidity, temperature;
-    while(!sht4.getEvent(&humidity, &temperature)) {
+    int num_retries = 0;
+    while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
+      num_retries++; // prevent infinite loop
       Serial.println("Retry measure");
       delay(10);
     }
-    // Send packet to gateway
-    radio.sendPacket(temperature.temperature, humidity.relative_humidity, sensor_id);
-    delay(10); // This is needed to prevent hanging
-    // TODO: If no reply, retry transmit once
-    // if (!radio.waitReply())
-    // {
-    //   radio.sendPacket(temperatureC, humidityRH, sensor_id);
-    // }
+    // Send packet to gateway if sensor reading exists
+    if (num_retries <= 10) {
+      radio.sendPacket(temperature.temperature, humidity.relative_humidity, sensor_id);
+      delay(10); // This is needed to prevent hanging
+      Serial.println("Packet sent!");
+      // TODO: If no reply, retry transmit once
+      // if (!radio.waitReply())
+      // {
+      //   radio.sendPacket(temperatureC, humidityRH, sensor_id);
+      // }
+    }
   }
   // Reset alarm and return to sleep
   radio.sleepRadio();
