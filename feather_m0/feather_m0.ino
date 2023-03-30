@@ -93,6 +93,8 @@ void loop()
       Serial.println("Retry measure");
       delay(10);
     }
+    // Turn off sensor
+    digitalWrite(SHT_PWD_PIN, LOW);
     // Send packet to gateway if sensor reading exists
     if (num_retries <= 10) {
       radio.sendPacket(temperature.temperature, humidity.relative_humidity, sensor_id);
@@ -103,6 +105,8 @@ void loop()
       // {
       //   radio.sendPacket(temperatureC, humidityRH, sensor_id);
       // }
+    } else {
+      Serial.println("Unable to get measurement");
     }
   }
   // Reset alarm and return to sleep
