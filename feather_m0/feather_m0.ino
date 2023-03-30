@@ -39,6 +39,9 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 
 void setup()
 {
+  // Begin console
+  Serial.begin(115200);
+
   // Turn off LED
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
@@ -48,9 +51,6 @@ void setup()
   pinMode(SHT_PWD_PIN, OUTPUT);
   digitalWrite(SHT_PWD_PIN, HIGH);
   delay(1);
-
-  // Begin console
-  Serial.begin(115200);
 
   // Setup temp sensor
   while (!sht4.begin()) {
