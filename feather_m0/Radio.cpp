@@ -71,12 +71,21 @@ void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
   // e.g. "I001T27.2H30.7" where I is ID, T is temperature and H is humidity
   char radiopacket[15];
   radiopacket[0] = 'I';
-  strcat(radiopacket, sensor_id);
+  radiopacket[1] = sensor_id[0];
+  radiopacket[2] = sensor_id[1];
+  radiopacket[3] = sensor_id[2];
   radiopacket[4] = 'T';
-  strcat(radiopacket, temperatureCString);
+  radiopacket[5] = temperatureCString[0];
+  radiopacket[6] = temperatureCString[1];
+  radiopacket[7] = temperatureCString[2];
+  radiopacket[8] = temperatureCString[3];
   radiopacket[9] = 'H';
-  strcat(radiopacket, humidityRHString);
+  radiopacket[10] = humidityRHString[0];
+  radiopacket[11] = humidityRHString[1];
+  radiopacket[12] = humidityRHString[2];
+  radiopacket[13] = humidityRHString[3];
   radiopacket[14] = 0; // set last char to 0
+  Serial.println(radiopacket);
 
   // TODO: Encrypt radio packet before sending
 
