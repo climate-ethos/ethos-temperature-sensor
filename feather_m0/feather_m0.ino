@@ -28,8 +28,8 @@ RTCZero zerortc;
 
 // Set how often alarm goes off here
 // TODO: Change to every 10 minutes
-const byte alarmSeconds = 0;
-const byte alarmMinutes = 10;
+const byte alarmSeconds = 10;
+const byte alarmMinutes = 0;
 const byte alarmHours = 0;
 
 volatile bool alarmFlag = true; // Start awake
@@ -66,21 +66,21 @@ void setup()
 
   // Setup radio
   radio.setupRadio();
-  radio.sleepRadio();
+  // radio.sleepRadio();
 
   // Setup clocks
-  zerortc.begin();
+  // zerortc.begin();
 
   // Set alarm
-  resetAlarm();
+  // resetAlarm();
   // Setup handler for alarm
-  zerortc.attachInterrupt(alarmMatch);
+  // zerortc.attachInterrupt(alarmMatch);
 }
 
 void loop()
 {
   // Woken up from sleep
-  if (alarmFlag == true) {
+  if (true) {
     alarmFlag = false;  // Clear flag
     // Turn on sensor
     digitalWrite(SHT_PWD_PIN, HIGH);
@@ -93,6 +93,9 @@ void loop()
       Serial.println("Retry measure");
       delay(10);
     }
+    Serial.println("Reading:");
+    Serial.println(temperature.temperature);
+    Serial.println(humidity.relative_humidity);
     // Turn off sensor
     digitalWrite(SHT_PWD_PIN, LOW);
     // Send packet to gateway if sensor reading exists
@@ -110,9 +113,10 @@ void loop()
     }
   }
   // Reset alarm and return to sleep
-  radio.sleepRadio();
-  resetAlarm();
-  zerortc.standbyMode();
+  // radio.sleepRadio();
+  // resetAlarm();
+  // zerortc.standbyMode();
+  delay(10000);
 }
 
 void alarmMatch(void)
