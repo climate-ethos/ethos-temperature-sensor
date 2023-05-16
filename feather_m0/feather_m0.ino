@@ -41,6 +41,7 @@ void setup()
 {
   // Begin console
   Serial.begin(115200);
+  while(!Serial);
 
   // Turn off LED
   pinMode(LED_BUILTIN, OUTPUT);
