@@ -28,8 +28,8 @@ RTCZero zerortc;
 
 // Set how often alarm goes off here
 // TODO: Change to every 10 minutes
-const byte alarmSeconds = 0;
-const byte alarmMinutes = 10;
+const byte alarmSeconds = 10;
+const byte alarmMinutes = 0;
 const byte alarmHours = 0;
 
 volatile bool alarmFlag = true; // Start awake
@@ -41,6 +41,7 @@ void setup()
 {
   // Begin console
   Serial.begin(115200);
+  while (!Serial); // Wait for serial connection
 
   // Turn off LED
   pinMode(LED_BUILTIN, OUTPUT);
@@ -82,6 +83,13 @@ void loop()
   // Woken up from sleep
   if (alarmFlag == true) {
     alarmFlag = false;  // Clear flag
+
+    // Re-enumerate USB
+    USBDevice.detach();
+    delay(5000); // You may need to adjust this delay
+    USBDevice.attach();
+    delay(5000);
+    
     // Turn on sensor
     digitalWrite(SHT_PWD_PIN, HIGH);
     delay(1);
