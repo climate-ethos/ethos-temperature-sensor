@@ -57,7 +57,7 @@ void setup()
   while (!sht4.begin()) {
     Serial.println("Couldn't find SHT4x");
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(10);
+    delay(50);
   }
   digitalWrite(LED_BUILTIN, LOW);
 
