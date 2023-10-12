@@ -1,0 +1,4 @@
+# Configuration file with secret variables
+conf.h
+# vscode folder
+.vscode/
