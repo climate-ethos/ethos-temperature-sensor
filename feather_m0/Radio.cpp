@@ -6,6 +6,14 @@
 // Radio imports
 #include <SPI.h>
 
+// Radio encryption
+#include <Crypto.h>
+#include <AES.h> // from 'Crypto' library
+
+AES128 aes;
+// TODO: Make key secure and move to config file
+byte key[] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+
 // Configure pins for feather m0
 #define RFM95_CS 8
 #define RFM95_RST 4
@@ -28,17 +36,24 @@ void Radio::setupRadio()
   delay(10);
 
   while (!_rf95.init()) {
+    // Turn on LED to indicate failure
+    digitalWrite(LED_BUILTIN, HIGH);
     Serial.println("LoRa radio init failed");
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
-    while (1);
+    delay(50);
   }
   Serial.println("LoRa radio init OK!");
 
   // Defaults after init: modulation GFSK_Rb250Fd250, +13dbM
-  if (!_rf95.setFrequency(_frequency)) {
+  while (!_rf95.setFrequency(_frequency)) {
+    // Turn on LED to indicate failure
+    digitalWrite(LED_BUILTIN, HIGH);
     Serial.println("setFrequency failed");
-    while (1);
+    delay(50);
   }
+
+  // Clear error light
+  digitalWrite(LED_BUILTIN, LOW);
 
   Serial.print("Set Freq to: ");
   Serial.println(_frequency);
@@ -69,28 +84,32 @@ void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
 
   // Radio packet looks like "IxxxTxxxxHxxxx0"
   // e.g. "I001T27.2H30.7" where I is ID, T is temperature and H is humidity
-  char radiopacket[15];
-  radiopacket[0] = 'I';
-  radiopacket[1] = sensor_id[0];
-  radiopacket[2] = sensor_id[1];
-  radiopacket[3] = sensor_id[2];
-  radiopacket[4] = 'T';
-  radiopacket[5] = temperatureCString[0];
-  radiopacket[6] = temperatureCString[1];
-  radiopacket[7] = temperatureCString[2];
-  radiopacket[8] = temperatureCString[3];
-  radiopacket[9] = 'H';
-  radiopacket[10] = humidityRHString[0];
-  radiopacket[11] = humidityRHString[1];
-  radiopacket[12] = humidityRHString[2];
-  radiopacket[13] = humidityRHString[3];
-  radiopacket[14] = 0; // set last char to 0
-  Serial.println(radiopacket);
+  char radioPacket[16]; // 16 bytes equals AES block size
+  radioPacket[0] = 'I';
+  radioPacket[1] = sensor_id[0];
+  radioPacket[2] = sensor_id[1];
+  radioPacket[3] = sensor_id[2];
+  radioPacket[4] = 'T';
+  radioPacket[5] = temperatureCString[0];
+  radioPacket[6] = temperatureCString[1];
+  radioPacket[7] = temperatureCString[2];
+  radioPacket[8] = temperatureCString[3];
+  radioPacket[9] = 'H';
+  radioPacket[10] = humidityRHString[0];
+  radioPacket[11] = humidityRHString[1];
+  radioPacket[12] = humidityRHString[2];
+  radioPacket[13] = humidityRHString[3];
+  radioPacket[14] = 0;
+  radioPacket[15] = 0; // set last char to 0
+  Serial.println(radioPacket);
 
-  // TODO: Encrypt radio packet before sending
+  // Encrypt radio packet before sending
+  uint8_t encryptedPacket[16];
+  aes.setKey(key, sizeof(key));
+  aes.encryptBlock(encryptedPacket, (uint8_t *)radioPacket);
 
   Serial.println("Sending...");
-  _rf95.send((uint8_t *)radiopacket, 20);
+  _rf95.send((uint8_t *)encryptedPacket, sizeof(encryptedPacket));
 
   Serial.println("Waiting for packet to complete...");
   delay(10);
