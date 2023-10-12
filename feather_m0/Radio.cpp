@@ -107,6 +107,12 @@ void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
   uint8_t encryptedPacket[16];
   aes.setKey(key, sizeof(key));
   aes.encryptBlock(encryptedPacket, (uint8_t *)radioPacket);
+  // Print encrypted packet in hexadecimal format
+  for (int i = 0; i < 16; i++) {
+      Serial.print(encryptedPacket[i], HEX);
+      Serial.print(" ");
+  }
+  Serial.println();
 
   Serial.println("Sending...");
   _rf95.send((uint8_t *)encryptedPacket, sizeof(encryptedPacket));
