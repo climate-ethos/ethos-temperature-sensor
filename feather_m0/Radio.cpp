@@ -28,16 +28,20 @@ void Radio::setupRadio()
   delay(10);
 
   while (!_rf95.init()) {
+    // Turn on LED to indicate failure
+    digitalWrite(LED_BUILTIN, HIGH);
     Serial.println("LoRa radio init failed");
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
-    while (1);
+    delay(50);
   }
   Serial.println("LoRa radio init OK!");
 
   // Defaults after init: modulation GFSK_Rb250Fd250, +13dbM
-  if (!_rf95.setFrequency(_frequency)) {
+  while (!_rf95.setFrequency(_frequency)) {
+    // Turn on LED to indicate failure
+    digitalWrite(LED_BUILTIN, HIGH);
     Serial.println("setFrequency failed");
-    while (1);
+    delay(50);
   }
 
   Serial.print("Set Freq to: ");
