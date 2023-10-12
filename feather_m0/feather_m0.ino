@@ -108,7 +108,8 @@ void loop()
       radio.sendPacket(temperature.temperature, humidity.relative_humidity, sensor_id);
       delay(10); // This is needed to prevent hanging
       Serial.println("Packet sent!");
-      // TODO: If no reply, retry transmit once
+      // TODO: Not implemented here but could be in the future if battery holds up well
+      // If no reply, retry transmit once
       // if (!radio.waitReply())
       // {
       //   radio.sendPacket(temperatureC, humidityRH, sensor_id);
