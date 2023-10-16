@@ -1,4 +1,5 @@
 #include "Radio.h"
+#include "config.h"
 
 // Allows dtostrf
 #include <avr/dtostrf.h>
@@ -11,8 +12,6 @@
 #include <AES.h> // from 'Crypto' library
 
 AES128 aes;
-// TODO: Make key secure and move to config file
-byte key[] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 
 // Configure pins for feather m0
 #define RFM95_CS 8
@@ -105,7 +104,7 @@ void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
 
   // Encrypt radio packet before sending
   uint8_t encryptedPacket[16];
-  aes.setKey(key, sizeof(key));
+  aes.setKey(reinterpret_cast<const uint8_t*>(KEY_STRING), sizeof(KEY_STRING) - 1);  // -1 to exclude the null terminator
   aes.encryptBlock(encryptedPacket, (uint8_t *)radioPacket);
   // Print encrypted packet in hexadecimal format
   for (int i = 0; i < 16; i++) {

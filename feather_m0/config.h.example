@@ -1,0 +1,8 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// Define the encryption key
+// Replace with key required for project
+const char KEY_STRING[] = "16_char_key_here";
+
+#endif // CONFIG_H
