@@ -20,7 +20,7 @@
 char sensor_id[] = "001";
 
 // TODO: Change default frequency of radio
-float radio_frequency = 915.0;
+float radio_frequency = 915.1;
 Radio radio(radio_frequency);
 
 // RTC Clock for sleep
