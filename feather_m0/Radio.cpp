@@ -104,7 +104,7 @@ void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
 
   // Encrypt radio packet before sending
   uint8_t encryptedPacket[16];
-  aes.setKey(KEY, sizeof(KEY));
+  aes.setKey(reinterpret_cast<const uint8_t*>(KEY_STRING), sizeof(KEY_STRING) - 1);  // -1 to exclude the null terminator
   aes.encryptBlock(encryptedPacket, (uint8_t *)radioPacket);
 
   Serial.println("Sending...");
