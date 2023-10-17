@@ -105,7 +105,7 @@ void loop()
     battery_voltage /= 1024; // Convert to voltage
     // Send packet to gateway if sensor reading exists
     if (num_retries < 10) {
-      radio.sendPacket(temperature.temperature, humidity.relative_humidity, battery_voltage, sensor_id);
+      radio.sendPacket(sensor_id, temperature.temperature, humidity.relative_humidity, battery_voltage);
       delay(10); // This is needed to prevent hanging
       Serial.println("Packet sent!");
       // TODO: Not implemented here but could be in the future if battery holds up well
