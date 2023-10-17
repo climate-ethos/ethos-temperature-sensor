@@ -36,7 +36,7 @@ class Radio {
      * @param humidityRH Relative humidity of reading %
      * @param sensor_id The ID of the sensor that is transmitting info
      */
-    void sendPacket(float temperatureC, float humidityRH, char sensor_id[3]);
+    void sendPacket(int sensor_id, float temperatureC, float humidityRH, float batteryVoltage);
 
     /**
      * @brief Wait for confirmation of response from gateway
