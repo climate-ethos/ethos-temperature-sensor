@@ -69,43 +69,30 @@ void Radio::sleepRadio() {
   _rf95.sleep();
 }
 
-void Radio::sendPacket(float temperatureC, float humidityRH, char sensor_id[3])
+void Radio::sendPacket(int sensorId, float temperatureC, float humidityRH, float batteryVoltage)
 {
-  // TODO: Better checks for overflows
-  // Convert floats to strings
-  char temperatureCString[5];
-  char humidityRHString[5];
-  dtostrf(temperatureC, 4, 1, temperatureCString);
-  dtostrf(humidityRH, 4, 1, humidityRHString);
-  // Sanitize to ensure that char array end is marked
-  temperatureCString[4] = 0;
-  humidityRHString[4] = 0;
+  // Check size of data types
+  if (sizeof(int) != 4) {
+    Serial.printf("Error, integer is wrong size: %d bytes\n", sizeof(int));
+    return;
+  }
+  if (sizeof(float) != 4) {
+    Serial.printf("Error, float is wrong size: %d bytes\n", sizeof(float));
+  }
 
-  // Radio packet looks like "IxxxTxxxxHxxxx0"
-  // e.g. "I001T27.2H30.7" where I is ID, T is temperature and H is humidity
-  char radioPacket[16]; // 16 bytes equals AES block size
-  radioPacket[0] = 'I';
-  radioPacket[1] = sensor_id[0];
-  radioPacket[2] = sensor_id[1];
-  radioPacket[3] = sensor_id[2];
-  radioPacket[4] = 'T';
-  radioPacket[5] = temperatureCString[0];
-  radioPacket[6] = temperatureCString[1];
-  radioPacket[7] = temperatureCString[2];
-  radioPacket[8] = temperatureCString[3];
-  radioPacket[9] = 'H';
-  radioPacket[10] = humidityRHString[0];
-  radioPacket[11] = humidityRHString[1];
-  radioPacket[12] = humidityRHString[2];
-  radioPacket[13] = humidityRHString[3];
-  radioPacket[14] = 0;
-  radioPacket[15] = 0; // set last char to 0
-  Serial.println(radioPacket);
+  // Radio packet should look like "IIIITTTTHHHHVVVV"
+  // Where I is ID, T is temperature, H is humidity and V is voltage
+  uint8_t radioPacket[16]; // 16 bytes equals AES block size
+
+  memcpy(&radioPacket[0], &sensorId, 4);
+  memcpy(&radioPacket[4], &temperatureC, 4);
+  memcpy(&radioPacket[8], &humidityRH, 4);
+  memcpy(&radioPacket[12], &batteryVoltage, 4);
 
   // Encrypt radio packet before sending
   uint8_t encryptedPacket[16];
   aes.setKey(reinterpret_cast<const uint8_t*>(KEY_STRING), sizeof(KEY_STRING) - 1);  // -1 to exclude the null terminator
-  aes.encryptBlock(encryptedPacket, (uint8_t *)radioPacket);
+  aes.encryptBlock(encryptedPacket, radioPacket);
 
   Serial.println("Sending...");
   _rf95.send((uint8_t *)encryptedPacket, sizeof(encryptedPacket));

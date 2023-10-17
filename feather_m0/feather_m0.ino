@@ -10,6 +10,9 @@
 // Define SHT power pin
 #define SHT_PWD_PIN A0
 
+// Define battery pin
+#define VBATPIN A7
+
 #if defined (MOTEINO_M0)
   #if defined(SERIAL_PORT_USBVIRTUAL)
     #define Serial SERIAL_PORT_USBVIRTUAL // Required for Serial on Zero based boards
@@ -17,17 +20,17 @@
 #endif
 
 // The ID of the sensor, change depending on what number to assign
-char sensor_id[] = "001";
+// This should match the sticker on the sensor
+int sensor_id = 1;
 
-// TODO: Change default frequency of radio
+// Change default frequency of radio
 float radio_frequency = 915.1;
 Radio radio(radio_frequency);
 
 // RTC Clock for sleep
 RTCZero zerortc;
 
-// Set how often alarm goes off here
-// TODO: Change to every 10 minutes
+// How often to take temperature measurements
 const byte alarmSeconds = 0;
 const byte alarmMinutes = 10;
 const byte alarmHours = 0;
@@ -95,9 +98,14 @@ void loop()
     }
     // Turn off sensor
     digitalWrite(SHT_PWD_PIN, LOW);
+    // Read battery voltage
+    float battery_voltage = analogRead(VBATPIN);
+    battery_voltage *= 2;    // Divided by 2, so multiply back
+    battery_voltage *= 3.3;  // Multiply by 3.3V (reference voltage)
+    battery_voltage /= 1024; // Convert to voltage
     // Send packet to gateway if sensor reading exists
     if (num_retries < 10) {
-      radio.sendPacket(temperature.temperature, humidity.relative_humidity, sensor_id);
+      radio.sendPacket(temperature.temperature, humidity.relative_humidity, battery_voltage, sensor_id);
       delay(10); // This is needed to prevent hanging
       Serial.println("Packet sent!");
       // TODO: Not implemented here but could be in the future if battery holds up well
