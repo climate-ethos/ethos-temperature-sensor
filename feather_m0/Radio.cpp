@@ -89,16 +89,19 @@ void Radio::sendPacket(int sensorId, float temperatureC, float humidityRH, float
   memcpy(&radioPacket[8], &humidityRH, 4);
   memcpy(&radioPacket[12], &batteryVoltage, 4);
   // Print packet in hexadecimal format
+  Serial.print("Unencrypted packet: ");
   for (int i = 0; i < 16; i++) {
       Serial.print(radioPacket[i], HEX);
       Serial.print(" ");
   }
+  Serial.println();
 
   // Encrypt radio packet before sending
   uint8_t encryptedPacket[16];
   aes.setKey(reinterpret_cast<const uint8_t*>(KEY_STRING), sizeof(KEY_STRING) - 1);  // -1 to exclude the null terminator
   aes.encryptBlock(encryptedPacket, radioPacket);
   // Print encrypted packet in hexadecimal format
+  Serial.print("Encrypted packet: ");
   for (int i = 0; i < 16; i++) {
       Serial.print(encryptedPacket[i], HEX);
       Serial.print(" ");
