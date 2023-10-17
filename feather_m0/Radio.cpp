@@ -71,17 +71,9 @@ void Radio::sleepRadio() {
 
 void Radio::sendPacket(int sensorId, float temperatureC, float humidityRH, float batteryVoltage)
 {
-  // Check size of data types
-  if (sizeof(int) != 4) {
-    Serial.printf("Error, integer is wrong size: %d bytes\n", sizeof(int));
-    return;
-  }
-  if (sizeof(float) != 4) {
-    Serial.printf("Error, float is wrong size: %d bytes\n", sizeof(float));
-  }
-
   // Radio packet should look like "IIIITTTTHHHHVVVV"
   // Where I is ID, T is temperature, H is humidity and V is voltage
+  // This assumes a 4 byte integer
   uint8_t radioPacket[16]; // 16 bytes equals AES block size
 
   memcpy(&radioPacket[0], &sensorId, 4);
