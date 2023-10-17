@@ -88,6 +88,11 @@ void Radio::sendPacket(int sensorId, float temperatureC, float humidityRH, float
   memcpy(&radioPacket[4], &temperatureC, 4);
   memcpy(&radioPacket[8], &humidityRH, 4);
   memcpy(&radioPacket[12], &batteryVoltage, 4);
+  // Print packet in hexadecimal format
+  for (int i = 0; i < 16; i++) {
+      Serial.print(radioPacket[i], HEX);
+      Serial.print(" ");
+  }
 
   // Encrypt radio packet before sending
   uint8_t encryptedPacket[16];
