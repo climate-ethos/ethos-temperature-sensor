@@ -53,7 +53,7 @@ void setup()
   digitalWrite(SHT_PWD_PIN, LOW);
   pinMode(SHT_PWD_PIN, OUTPUT);
   digitalWrite(SHT_PWD_PIN, HIGH);
-  delay(1);
+  delay(5);
 
   // Setup temp sensor
   while (!sht4.begin()) {
@@ -87,7 +87,7 @@ void loop()
     alarmFlag = false;  // Clear flag
     // Turn on sensor
     digitalWrite(SHT_PWD_PIN, HIGH);
-    delay(1);
+    delay(5);
     // Read sensor data measurement
     sensors_event_t humidity, temperature;
     int num_retries = 0;
