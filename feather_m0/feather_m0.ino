@@ -93,8 +93,16 @@ void loop()
     int num_retries = 0;
     while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
       num_retries++; // prevent infinite loop
-      Serial.println("Retry measure");
       delay(10);
+    }
+    if (num_retries >= 10) {
+      // Turn off sensor
+      digitalWrite(SHT_PWD_PIN, LOW);
+      // Reset alarm and return to sleep
+      radio.sleepRadio();
+      resetAlarm();
+      zerortc.standbyMode();
+      return; // End the loop immediately
     }
     // Turn off sensor
     digitalWrite(SHT_PWD_PIN, LOW);
@@ -107,15 +115,6 @@ void loop()
     if (num_retries < 10) {
       radio.sendPacket(sensor_id, temperature.temperature, humidity.relative_humidity, battery_voltage);
       delay(10); // This is needed to prevent hanging
-      Serial.println("Packet sent!");
-      // TODO: Not implemented here but could be in the future if battery holds up well
-      // If no reply, retry transmit once
-      // if (!radio.waitReply())
-      // {
-      //   radio.sendPacket(temperatureC, humidityRH, sensor_id);
-      // }
-    } else {
-      Serial.println("Unable to get measurement");
     }
   }
   // Reset alarm and return to sleep
