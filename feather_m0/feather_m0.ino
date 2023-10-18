@@ -96,6 +96,8 @@ void loop()
       delay(10);
     }
     if (num_retries >= 10) {
+      // Unable to get measurment
+      delay(10);
       // Turn off sensor
       digitalWrite(SHT_PWD_PIN, LOW);
       // Reset alarm and return to sleep
@@ -116,6 +118,8 @@ void loop()
       radio.sendPacket(sensor_id, temperature.temperature, humidity.relative_humidity, battery_voltage);
       delay(10); // This is needed to prevent hanging
     }
+    // Really make sure sensor is off
+    digitalWrite(SHT_PWD_PIN, LOW);
   }
   // Reset alarm and return to sleep
   radio.sleepRadio();
