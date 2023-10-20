@@ -52,20 +52,10 @@ void setup()
   // Setup A0 to power output
   digitalWrite(SHT_PWD_PIN, LOW);
   pinMode(SHT_PWD_PIN, OUTPUT);
-  digitalWrite(SHT_PWD_PIN, HIGH);
-  delay(5);
-
-  // Setup temp sensor
-  while (!sht4.begin()) {
-    Serial.println("Couldn't find SHT4x");
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(50);
-  }
-  digitalWrite(LED_BUILTIN, LOW);
 
   sht4.setPrecision(SHT4X_HIGH_PRECISION);
   sht4.setHeater(SHT4X_NO_HEATER);
-  Serial.println("Initialized sensor");
+  Serial.println("Configured sensor");
 
   // Setup radio
   radio.setupRadio();
@@ -88,47 +78,62 @@ void loop()
     // Turn on sensor
     digitalWrite(SHT_PWD_PIN, HIGH);
     delay(5);
-    // Read sensor data measurement
-    sensors_event_t humidity, temperature;
+    
+    // Setup temp sensor
     int num_retries = 0;
-    while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
-      num_retries++; // prevent infinite loop
+    while (!sht4.begin()  && num_retries < 10) {
+      num_retries++; // Prevent infinite loop
       delay(10);
     }
     if (num_retries >= 10) {
-      // Unable to get measurment
-      delay(10);
-      // Turn off sensor
-      digitalWrite(SHT_PWD_PIN, LOW);
-      // Reset alarm and return to sleep
-      radio.sleepRadio();
-      resetAlarm();
-      zerortc.standbyMode();
+      Serial.println("Unable to setup radio");
+      sleepEverything();
       return; // End the loop immediately
     }
+    
+    // Read sensor data measurement
+    sensors_event_t humidity, temperature;
+    num_retries = 0;
+    while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
+      num_retries++; // Prevent infinite loop
+      delay(10);
+    }
+    if (num_retries >= 10) {
+      Serial.println("Unable to get temp/humidity measurment");
+      sleepEverything();
+      return; // End the loop immediately
+    }
+    
     // Turn off sensor
     digitalWrite(SHT_PWD_PIN, LOW);
+    
     // Read battery voltage
     float battery_voltage = analogRead(VBATPIN);
     battery_voltage *= 2;    // Divided by 2, so multiply back
     battery_voltage *= 3.3;  // Multiply by 3.3V (reference voltage)
     battery_voltage /= 1024; // Convert to voltage
+    
     // Send packet to gateway if sensor reading exists
     if (num_retries < 10) {
       radio.sendPacket(sensor_id, temperature.temperature, humidity.relative_humidity, battery_voltage);
       delay(10); // This is needed to prevent hanging
     }
-    // Really make sure sensor is off
-    digitalWrite(SHT_PWD_PIN, LOW);
   }
   // Reset alarm and return to sleep
+  sleepEverything();
+}
+
+void sleepEverything(void) {
+  // Turn off sensor
+  digitalWrite(SHT_PWD_PIN, LOW);
+  // Turn off radio
   radio.sleepRadio();
+  // Reset alarm and return to sleep
   resetAlarm();
   zerortc.standbyMode();
 }
 
-void alarmMatch(void)
-{
+void alarmMatch(void) {
   alarmFlag = true; // Set flag
 }
 
