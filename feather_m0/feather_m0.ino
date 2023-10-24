@@ -53,20 +53,10 @@ void setup()
   // Setup A0 to power output
   digitalWrite(SHT_PWD_PIN, LOW);
   pinMode(SHT_PWD_PIN, OUTPUT);
-  digitalWrite(SHT_PWD_PIN, HIGH);
-  delay(1);
-
-  // Setup temp sensor
-  while (!sht4.begin()) {
-    Serial.println("Couldn't find SHT4x");
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(50);
-  }
-  digitalWrite(LED_BUILTIN, LOW);
 
   sht4.setPrecision(SHT4X_HIGH_PRECISION);
   sht4.setHeater(SHT4X_NO_HEATER);
-  Serial.println("Initialized sensor");
+  Serial.println("Configured sensor");
 
   // Setup radio
   radio.setupRadio();
@@ -88,49 +78,60 @@ void loop()
     alarmFlag = false;  // Clear flag
     // Turn on sensor
     digitalWrite(SHT_PWD_PIN, HIGH);
-    delay(1);
-    // Read sensor data measurement
-    sensors_event_t humidity, temperature;
+    delay(5);
+
+    // Setup temp sensor
     int num_retries = 0;
-    while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
-      num_retries++; // prevent infinite loop
-      Serial.println("Retry measure");
+    while (!sht4.begin()  && num_retries < 10) {
+      num_retries++; // Prevent infinite loop
       delay(10);
     }
+
+    if (num_retries >= 10) {
+      Serial.println("Unable to setup radio");
+      delay(100);
+      return; // End the loop immediately
+    }
+
+    // Read sensor data measurement
+    sensors_event_t humidity, temperature;
+    num_retries = 0;
+    while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
+      num_retries++; // Prevent infinite loop
+      delay(10);
+    }
+    if (num_retries >= 10) {
+      Serial.println("Unable to get temp/humidity measurment");
+      delay(100);
+      return; // End the loop immediately
+    }
+
     Serial.println("Reading:");
     Serial.println(temperature.temperature);
     Serial.println(humidity.relative_humidity);
     // Turn off sensor
     digitalWrite(SHT_PWD_PIN, LOW);
+
     // Read battery voltage
     float battery_voltage = analogRead(VBATPIN);
     battery_voltage *= 2;    // Divided by 2, so multiply back
     battery_voltage *= 3.3;  // Multiply by 3.3V (reference voltage)
     battery_voltage /= 1024; // Convert to voltage
+
     // Send packet to gateway if sensor reading exists
     if (num_retries < 10) {
       radio.sendPacket(sensor_id, temperature.temperature, humidity.relative_humidity, battery_voltage);
       delay(10); // This is needed to prevent hanging
-      Serial.println("Packet sent!");
-      // TODO: Not implemented here but could be in the future if battery holds up well
-      // If no reply, retry transmit once
-      // if (!radio.waitReply())
-      // {
-      //   radio.sendPacket(temperatureC, humidityRH, sensor_id);
-      // }
-    } else {
-      Serial.println("Unable to get measurement");
     }
   }
   // Reset alarm and return to sleep
   // radio.sleepRadio();
   // resetAlarm();
   // zerortc.standbyMode();
-  delay(10000);
+  delay(100);
 }
 
-void alarmMatch(void)
-{
+void alarmMatch(void) {
   alarmFlag = true; // Set flag
 }
 
