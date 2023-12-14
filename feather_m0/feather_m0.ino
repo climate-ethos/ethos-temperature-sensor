@@ -77,36 +77,36 @@ void loop()
     alarmFlag = false;  // Clear flag
     // Turn on sensor
     digitalWrite(SHT_PWD_PIN, HIGH);
-    delay(5);
-    
+    delay(10);
+
     // Setup temp sensor
     int num_retries = 0;
-    while (!sht4.begin()  && num_retries < 10) {
+    while (!sht4.begin() && num_retries < 10) {
       num_retries++; // Prevent infinite loop
-      delay(10);
+      delay(15);
     }
     if (num_retries >= 10) {
       Serial.println("Unable to setup radio");
       sleepEverything();
       return; // End the loop immediately
     }
-    
+
     // Read sensor data measurement
     sensors_event_t humidity, temperature;
     num_retries = 0;
     while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
       num_retries++; // Prevent infinite loop
-      delay(10);
+      delay(15);
     }
     if (num_retries >= 10 || isnan(humidity.relative_humidity) || isnan(temperature.temperature)) {
       Serial.println("Unable to get temp/humidity measurement");
       sleepEverything();
       return; // End the loop immediately
     }
-    
+
     // Turn off sensor
     digitalWrite(SHT_PWD_PIN, LOW);
-    
+
     // Read battery voltage
     u_int32_t raw_voltage_value = analogRead(VBATPIN);
     float battery_voltage = raw_voltage_value * 2; // Divided by 2, so multiply back
