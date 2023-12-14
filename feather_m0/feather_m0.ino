@@ -98,8 +98,8 @@ void loop()
       num_retries++; // Prevent infinite loop
       delay(10);
     }
-    if (num_retries >= 10) {
-      Serial.println("Unable to get temp/humidity measurment");
+    if (num_retries >= 10 || isnan(humidity.relative_humidity) || isnan(temperature.temperature)) {
+      Serial.println("Unable to get temp/humidity measurement");
       sleepEverything();
       return; // End the loop immediately
     }
@@ -108,11 +108,15 @@ void loop()
     digitalWrite(SHT_PWD_PIN, LOW);
     
     // Read battery voltage
-    float battery_voltage = analogRead(VBATPIN);
-    battery_voltage *= 2;    // Divided by 2, so multiply back
+    u_int32_t raw_voltage_value = analogRead(VBATPIN);
+    float battery_voltage = raw_voltage_value * 2; // Divided by 2, so multiply back
     battery_voltage *= 3.3;  // Multiply by 3.3V (reference voltage)
     battery_voltage /= 1024; // Convert to voltage
-    
+    // Ensure battery voltage is within a realistic range
+    if (battery_voltage <= 0.0 || battery_voltage > 5.0) {
+      battery_voltage = 1; // Default safe value
+    }
+
     // Send packet to gateway if sensor reading exists
     if (num_retries < 10) {
       radio.sendPacket(sensor_id, temperature.temperature, humidity.relative_humidity, battery_voltage);
