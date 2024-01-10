@@ -79,29 +79,47 @@ void loop()
     digitalWrite(SHT_PWD_PIN, HIGH);
     delay(10);
 
+    // Temp/humidity values
+    float humidity_value = 0;
+    float temperature_value = 0;
+
     // Setup temp sensor
     int num_retries = 0;
     while (!sht4.begin() && num_retries < 10) {
       num_retries++; // Prevent infinite loop
       delay(15);
     }
-    if (num_retries >= 10) {
+    bool isSuccessfulSetup = num_retries < 10;
+    if (!isSuccessfulSetup) {
       Serial.println("Unable to setup radio");
-      sleepEverything();
-      return; // End the loop immediately
+      // -700 = Sensor was never able to initialize
+      humidity_value = -700;
+      temperature_value = -700;
     }
 
-    // Read sensor data measurement
-    sensors_event_t humidity, temperature;
-    num_retries = 0;
-    while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
-      num_retries++; // Prevent infinite loop
-      delay(15);
-    }
-    if (num_retries >= 10 || isnan(humidity.relative_humidity) || isnan(temperature.temperature)) {
-      Serial.println("Unable to get temp/humidity measurement");
-      sleepEverything();
-      return; // End the loop immediately
+    // If setup successful, read sensor data measurement
+    if (isSuccessfulSetup) {
+      sensors_event_t humidity, temperature;
+      num_retries = 0;
+      while(!sht4.getEvent(&humidity, &temperature) && num_retries < 10) {
+        num_retries++; // Prevent infinite loop
+        delay(15);
+      }
+      if (num_retries >= 10) {
+        Serial.println("Unable to get temp/humidity measurement");
+        // -900 = Sensor never returned values
+        humidity_value = -900;
+        temperature_value = -900;
+      } else if (isnan(humidity.relative_humidity) || isnan(temperature.temperature)) {
+        Serial.println("Invalid temp/humidity measurement");
+        // -800 = Sensor returned invalid values
+        humidity_value = -800;
+        temperature_value = -800;
+      } else {
+        // Valid measurement
+        temperature_value = temperature.temperature;
+        humidity_value = humidity.relative_humidity;
+      }
     }
 
     // Turn off sensor
@@ -113,15 +131,14 @@ void loop()
     battery_voltage *= 3.3;  // Multiply by 3.3V (reference voltage)
     battery_voltage /= 1024; // Convert to voltage
     // Ensure battery voltage is within a realistic range
-    if (battery_voltage <= 0.0 || battery_voltage > 5.0) {
-      battery_voltage = 1; // Default safe value
+    if (isnan(battery_voltage) || battery_voltage <= 0.0 || battery_voltage > 5.0) {
+      // -900 = Battery voltage was invalid
+      battery_voltage = -900;
     }
 
-    // Send packet to gateway if sensor reading exists
-    if (num_retries < 10) {
-      radio.sendPacket(sensor_id, temperature.temperature, humidity.relative_humidity, battery_voltage);
-      delay(10); // This is needed to prevent hanging
-    }
+    // Always send packet to gateway
+    radio.sendPacket(sensor_id, temperature_value, humidity_value, battery_voltage);
+    delay(10); // This is needed to prevent hanging
   }
   // Reset alarm and return to sleep
   sleepEverything();
