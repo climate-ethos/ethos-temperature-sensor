@@ -11,10 +11,10 @@ This is the code which runs on the Feather M0 board to send temperature sensor d
 ## Automatic upload script
 
 1. Install the Arduino CLI (instructions [here](https://arduino.github.io/arduino-cli/0.35/installation/))
-2. Run the setup script with `sh arduino_cli_setup.sh`
+2. Run the setup script with `sh arduino_cli_setup.sh` or `arduino_cli_setup.bat` (Windows)
 3. Ensure all libraries are in the `Arduino/libraries` path
 4. (On MacOS) run `brew install gnu-sed`
-5. Run the upload script with `sh mac_sensor_upload.sh`
+5. Run the upload script with `sh mac_sensor_upload.sh` or `windows_sensor_upload.bat`
 6. Plug in a device and double tap reset button to allow upload
 
 ## Arduino IDE Setup
