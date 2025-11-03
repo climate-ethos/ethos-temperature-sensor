@@ -34,21 +34,40 @@ void Radio::setupRadio()
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
 
-  while (!_rf95.init()) {
+  // Add retry loop to prevent hang if radio is not found
+  int retries = 0;
+  while (!_rf95.init() && retries < 10) {
     // Turn on LED to indicate failure
     digitalWrite(LED_BUILTIN, HIGH);
     Serial.println("LoRa radio init failed");
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
-    delay(50);
+    delay(500);
+    retries++;
   }
+
+  // If it still failed, halt. The Watchdog Timer will reset the device.
+  if (retries >= 10) {
+    Serial.println("FATAL: Radio init failed. Halting.");
+    while (1);
+  }
+
   Serial.println("LoRa radio init OK!");
 
   // Defaults after init: modulation GFSK_Rb250Fd250, +13dbM
-  while (!_rf95.setFrequency(_frequency)) {
+  // Add retry loop
+  retries = 0;
+  while (!_rf95.setFrequency(_frequency) && retries < 10) {
     // Turn on LED to indicate failure
     digitalWrite(LED_BUILTIN, HIGH);
     Serial.println("setFrequency failed");
-    delay(50);
+    delay(500);
+    retries++;
+  }
+
+  // If it still failed, halt. The Watchdog Timer will reset the device.
+  if (retries >= 10) {
+    Serial.println("FATAL: Radio setFrequency failed. Halting.");
+    while (1);
   }
 
   // Clear error light
@@ -62,7 +81,11 @@ void Radio::setupRadio()
   // The default transmitter power is 13dBm, using PA_BOOST.
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
   // you can set transmitter powers from 5 to 23 dBm:
-  _rf95.setTxPower(23, false);
+
+  // Reduced power from 23 to 20. 23dBm is very high and can
+  // cause voltage brownouts on battery, crashing the MCU.
+  // 20dBm is still very high power.
+  _rf95.setTxPower(20, false);
 }
 
 void Radio::sleepRadio() {
@@ -91,7 +114,15 @@ void Radio::sendPacket(int sensorId, float temperatureC, float humidityRH, float
 
   Serial.println("Waiting for packet to complete...");
   delay(10);
-  _rf95.waitPacketSent();
+
+  // Added a 10-second (10000ms) timeout to waitPacketSent().
+  // The original call had no timeout and was the most likely
+  // cause of your device hanging.
+  if (!_rf95.waitPacketSent(10000)) {
+    Serial.println("WARNING: waitPacketSent() timed out. Radio may be hung.");
+  } else {
+    Serial.println("Packet sent.");
+  }
 }
 
 bool Radio::waitReply()
